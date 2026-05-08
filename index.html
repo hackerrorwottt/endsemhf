@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber-Dashboard | ISS & News</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js for the Speed Trend -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="cyber-container">
+        <header class="glitch-header" data-text="MISSION CONTROL DASHBOARD">
+            MISSION CONTROL DASHBOARD<br>
+            <span style="font-size: 1.5rem; color: #fff; text-shadow: none; letter-spacing: 2px;">Real-Time ISS and News
+                Intelligence</span>
+        </header>
+
+        <div class="dashboard-grid-new">
+            <!-- Top Row: Map + Stats on left, Chart on right -->
+            <div class="top-row">
+                <!-- PART 1: ISS Live Tracking -->
+                <section class="panel iss-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">ISS Live Tracking</h2>
+                        <div class="panel-actions">
+                            <button id="refresh-iss" class="cyber-btn-small">Refresh Now</button>
+                            <button class="cyber-btn-small" style="cursor: default;">Auto-Refresh: ON</button>
+                        </div>
+                    </div>
+
+                    <div class="iss-stats">
+                        <div class="stat-box">
+                            <span class="stat-label">Latitude / Longitude</span>
+                            <span class="stat-value"><span id="iss-lat">0.00</span>, <span
+                                    id="iss-lon">0.00</span></span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Speed</span>
+                            <span class="stat-value"><span id="iss-speed">0</span> km/h</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Nearest Place</span>
+                            <span id="iss-loc-name" class="stat-value"
+                                style="font-size: 1rem; line-height: 1.2; display: block; margin-top: 5px;">Unknown</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Tracked Positions</span>
+                            <span id="iss-count" class="stat-value">0</span>
+                        </div>
+                    </div>
+
+                    <div id="map"></div>
+                </section>
+
+                <!-- ISS Speed Trend Chart -->
+                <section class="panel chart-panel">
+                    <h2 class="panel-title">ISS Speed Trend</h2>
+                    <div class="chart-container" style="position: relative; height: 480px; width: 100%;">
+                        <canvas id="speedChart"></canvas>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Bottom Row: News Dashboard -->
+            <section class="panel news-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Breaking News</h2>
+                    <button id="refresh-news" class="cyber-btn-small">Refresh</button>
+                </div>
+                <div class="news-controls">
+                    <input type="text" id="news-search" class="cyber-input"
+                        placeholder="Search title, source, author...">
+                    <select id="news-sort" class="cyber-select">
+                        <option value="date">Sort by Date</option>
+                        <option value="source">Sort by Source</option>
+                    </select>
+                </div>
+                <div id="news-loading" class="loading-indicator" style="display: none;">[ DECRYPTING DATA... ]</div>
+                <div id="news-container" class="news-container">
+                    <!-- News articles will be injected here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- PART 3: AI Chatbot -->
+        <div class="chatbot-wrapper">
+            <button id="chatbot-toggle" class="cyber-fab">
+                <span class="fab-icon">AI</span>
+            </button>
+
+            <div id="chatbot-window" class="chatbot-window hidden">
+                <div class="chatbot-header">
+                    <h3>SYSTEM AI</h3>
+                    <button id="clear-chat" class="cyber-btn-small">CLEAR</button>
+                    <button id="close-chat" class="close-btn">&times;</button>
+                </div>
+                <div id="chat-messages" class="chat-messages">
+                    <!-- Messages go here -->
+                </div>
+                <div class="chatbot-input-area">
+                    <input type="text" id="chat-input" class="cyber-input" placeholder="Query system...">
+                    <button id="send-btn" class="cyber-btn-small">SEND</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script type="module" src="/script.js"></script>
+</body>
+
+</html>
