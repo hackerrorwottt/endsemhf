@@ -1,5 +1,6 @@
 :root {
     --bg-color: #050505;
+    --grid-color: rgba(0, 255, 255, 0.05);
     --panel-bg: rgba(10, 10, 20, 0.85);
     --neon-pink: #f0f;
     --neon-blue: #0ff;
@@ -18,12 +19,22 @@
 body {
     background-color: var(--bg-color);
     background-image: 
-        linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
     background-size: 20px 20px;
     color: var(--text-main);
     font-family: var(--font-body);
     overflow-x: hidden;
+}
+
+body.light-mode {
+    --bg-color: #f6fbff;
+    --grid-color: rgba(0, 65, 120, 0.08);
+    --panel-bg: rgba(255, 255, 255, 0.92);
+    --neon-pink: #b000b5;
+    --neon-blue: #007bff;
+    --text-main: #1b1f24;
+    --border-glow: 0 0 8px rgba(0, 123, 255, 0.35), inset 0 0 8px rgba(0, 123, 255, 0.25);
 }
 
 .cyber-container {
@@ -147,6 +158,10 @@ body {
     filter: invert(90%) hue-rotate(180deg);
 }
 
+body.light-mode #map {
+    filter: none;
+}
+
 /* Forms & Buttons */
 .cyber-input, .cyber-select {
     background: rgba(0, 0, 0, 0.5);
@@ -183,6 +198,11 @@ body {
     background: var(--neon-pink);
     color: #000;
     box-shadow: 0 0 15px var(--neon-pink);
+}
+
+body.light-mode .cyber-btn:hover,
+body.light-mode .cyber-btn-small:hover {
+    color: #fff;
 }
 
 /* News Section */

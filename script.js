@@ -29,6 +29,25 @@ const state = {
 
 let map, marker, polyline, speedChart;
 
+function initTheme() {
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (!toggleBtn) return;
+
+    const savedTheme = localStorage.getItem('dashboard_theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        toggleBtn.innerText = 'Dark Mode';
+    } else {
+        toggleBtn.innerText = 'Light Mode';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        const isLight = document.body.classList.toggle('light-mode');
+        localStorage.setItem('dashboard_theme', isLight ? 'light' : 'dark');
+        toggleBtn.innerText = isLight ? 'Dark Mode' : 'Light Mode';
+    });
+}
+
 // ==========================================
 // PART 1: ISS TRACKING & CHART
 // ==========================================
@@ -491,6 +510,7 @@ document.getElementById('clear-chat').addEventListener('click', () => {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initMap();
     initChart();
     fetchPeopleInSpace();
