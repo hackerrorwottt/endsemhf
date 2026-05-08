@@ -151,10 +151,10 @@ async function fetchLocationName(lat, lon) {
 let lastFetchTime = 0;
 async function updateISS() {
     try {
-        const res = await fetch('http://api.open-notify.org/iss-now.json');
+        const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
         const data = await res.json();
-        const lat = parseFloat(data.iss_position.latitude);
-        const lon = parseFloat(data.iss_position.longitude);
+        const lat = parseFloat(data.latitude);
+        const lon = parseFloat(data.longitude);
         const now = Date.now();
 
         // Approximate base speed if it's the first fetch (ISS is roughly 27,600 km/h)
@@ -200,7 +200,7 @@ async function updateISS() {
 
 async function fetchPeopleInSpace() {
     try {
-        const res = await fetch('http://api.open-notify.org/astros.json');
+        const res = await fetch('https://api.open-notify.org/astros.json');
         const data = await res.json();
         state.iss.people = data.people;
     } catch (e) {
@@ -232,27 +232,49 @@ async function fetchNews() {
     container.innerHTML = '';
 
     try {
-        const url = `https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en`;
-        const res = await fetch(url);
-        const data = await res.json();
-        
-        if (data.results) {
-            state.news.articles = data.results.slice(0, 10).map(a => ({
-                title: a.title,
-                source: a.source_id,
-                author: a.creator ? a.creator[0] : 'Unknown Agent',
-                date: a.pubDate,
-                image: a.image_url || 'https://via.placeholder.com/120x120.png?text=NO+IMAGE',
-                desc: a.description ? a.description.substring(0, 150) + '...' : 'No data available.',
-                url: a.link
-            }));
-            
+        let articles = [];
+
+        if (NEWS_API_KEY) {
+            const url = `https://newsdata.io/api/1/news?apikey=${NEWS_API_KEY}&language=en`;
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.results) {
+                articles = data.results.slice(0, 10).map(a => ({
+                    title: a.title,
+                    source: a.source_id || 'newsdata',
+                    author: a.creator ? a.creator[0] : 'Unknown Agent',
+                    date: a.pubDate,
+                    image: a.image_url || 'https://via.placeholder.com/120x120.png?text=NO+IMAGE',
+                    desc: a.description ? a.description.substring(0, 150) + '...' : 'No data available.',
+                    url: a.link
+                }));
+            }
+        } else {
+            // No API key configured (e.g., Vercel env not set): use public space news fallback.
+            const fallbackRes = await fetch('https://api.spaceflightnewsapi.net/v4/articles/?limit=10');
+            const fallbackData = await fallbackRes.json();
+            if (fallbackData.results) {
+                articles = fallbackData.results.map(a => ({
+                    title: a.title,
+                    source: a.news_site || 'spaceflightnews',
+                    author: a.authors && a.authors[0] ? a.authors[0].name : 'Unknown Agent',
+                    date: a.published_at,
+                    image: a.image_url || 'https://via.placeholder.com/120x120.png?text=NO+IMAGE',
+                    desc: a.summary ? a.summary.substring(0, 150) + '...' : 'No data available.',
+                    url: a.url
+                }));
+            }
+        }
+
+        if (articles.length > 0) {
+            state.news.articles = articles;
             localStorage.setItem('cyber_news', JSON.stringify({
                 data: state.news.articles,
                 timestamp: Date.now()
             }));
-            
             renderNews();
+        } else {
+            container.innerHTML = `<div class="msg bot">API ERROR: No news records received.</div>`;
         }
     } catch (e) {
         container.innerHTML = `<div class="msg bot">API ERROR: Failed to decrypt news feed.</div>`;
@@ -348,6 +370,15 @@ function removeTyping(id) {
 
 function getLocalDashboardReply(text) {
     const q = text.toLowerCase();
+    if (/\b(hi|hii|hello|hey|hloo|hola)\b/.test(q)) {
+        return `Hello commander. ISS is at ${state.iss.lat.toFixed(2)}, ${state.iss.lon.toFixed(2)} traveling ${state.iss.speed} km/h.`;
+    }
+    if (/\b(thank|thanks)\b/.test(q)) {
+        return 'Anytime. Ask me ISS status, people in space, or top news.';
+    }
+    if (q.includes('help') || q.includes('what can you do')) {
+        return 'I can report ISS speed/location, people in space, and summarize top news from the live dashboard.';
+    }
     if (q.includes('iss') && q.includes('speed')) return `ISS speed is ${state.iss.speed} km/h.`;
     if (q.includes('latitude') || q.includes('lat')) return `ISS latitude is ${state.iss.lat}.`;
     if (q.includes('longitude') || q.includes('lon')) return `ISS longitude is ${state.iss.lon}.`;
@@ -357,7 +388,7 @@ function getLocalDashboardReply(text) {
         const top = state.news.articles[0];
         return top ? `Top headline: ${top.title}` : 'News data is not loaded yet.';
     }
-    return 'AI service is unavailable right now. I can still answer ISS/news questions from current dashboard data.';
+    return 'I am online in local mode. Ask about ISS speed/location, astronauts in space, or latest news.';
 }
 
 async function handleChat() {
@@ -384,6 +415,15 @@ Recent News:
 ${newsSummary}`;
 
     try {
+        if (!HF_TOKEN) {
+            removeTyping(typingId);
+            const localReply = getLocalDashboardReply(text);
+            state.chat.push({ role: 'bot', text: localReply });
+            renderChat();
+            saveChat();
+            return;
+        }
+
         const res = await fetch(`https://router.huggingface.co/v1/chat/completions`, {
             method: "POST",
             headers: {
